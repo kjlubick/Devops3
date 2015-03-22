@@ -52,7 +52,7 @@ app.use(function(req, res, next)
 
 app.get('/', function(req, res) {
     client.get("number of visits", function(err, value) {
-        res.send('hello world '+value)
+        res.send('hello world '+value+'<form action="upload" method="post" enctype="multipart/form-data">Select image to upload:<br/><input type="file" name="image" id="image"><input type="submit" value="Upload Image" name="submit"></form>');
         client.incr("number of visits");
     });
   
