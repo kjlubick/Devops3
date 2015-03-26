@@ -40,15 +40,11 @@ app.use(function(req, res, next)
  }]);
 
  app.get('/meow', function(req, res) {
-     client.lrange("imageList", 0, 0, function(err, items) 	{
+     client.rpop("imageList", function(err, imagedata)   {
  		if (err) throw err
  		res.writeHead(200, {'content-type':'text/html'});
- 		items.forEach(function (imagedata) 
- 		{
-    		res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imagedata+"'/>");
- 		});
+        res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imagedata+"'/>");
     	res.end();
-        client.ltrim("imageList", 1, -1);
  	});
  });
 
