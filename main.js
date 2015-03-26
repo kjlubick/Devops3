@@ -2,6 +2,8 @@ var redis = require('redis')
 var multer  = require('multer')
 var express = require('express')
 var fs      = require('fs')
+var http = require('http')
+var httpProxy = require('http-proxy')
 var app = express()
 // REDIS
 var client = redis.createClient(6379, '127.0.0.1', {})
@@ -82,7 +84,7 @@ app.get('/get', function(req, res) {
         } else {
             res.send('The clock has begun');
             client.set("mykey", "SOMETHING");
-            client.expire("mykey", 100);
+            client.expire("mykey", 10);
         }
     });
   
@@ -95,5 +97,44 @@ app.get('/get', function(req, res) {
    var port = server.address().port
 
    console.log('Example app listening at http://%s:%s', host, port)
+ });
+ 
+ // HTTP SERVER
+ var server2 = app.listen(3001, function () {
+
+   var host = server.address().address
+   var port = server.address().port
+
+   console.log('Example app listening at http://%s:%s', host, port)
  })
 
+ var addresses = [
+  {
+    host: '127.0.0.1',
+    port: 3000
+  },
+  {
+    host: '127.0.0.1',
+    port: 3001
+  }
+];
+ 
+ var proxy = httpProxy.createServer();
+
+http.createServer(function (req, res) {
+    //
+    // On each request, get the index of which address to use
+    // and increment it
+    client.incr("addressIndex", function(err, value){
+        console.log(value);
+        var target = { target: addresses[value % addresses.length] };
+
+        //
+        // ...then proxy to the server whose 'turn' it is...
+        //
+        console.log('balancing request to: ', target);
+        proxy.web(req, res, target);
+    });
+
+
+}).listen(80);
