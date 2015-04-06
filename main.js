@@ -6,7 +6,18 @@ var http = require('http')
 var httpProxy = require('http-proxy')
 var app = express()
 // REDIS
-var client = redis.createClient(6379, '127.0.0.1', {})
+
+var REDISPORT = args[0];
+
+var client = redis.createClient(REDISPORT, '127.0.0.1', {});
+
+var MIRROR_TO = args[1];
+
+var mirrorClient = undefined;
+if (MIRROR_TO) {
+  mirrorClient = redis.createClient(MIRROR_TO, '127.0.0.1', {}) ; 
+}
+
 
 ///////////// WEB ROUTES
 
@@ -33,6 +44,9 @@ app.use(function(req, res, next)
  	  		var img = new Buffer(data).toString('base64');
  	  		console.log("Pushing image");
             client.rpush("imageList", img);
+            if (mirrorClient) {
+                mirrorClient.rpush("imageList",img);
+            }
  		});
  	}
 
